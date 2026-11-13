@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="PDV.App/PDV.App.csproj" />
+  <Project Path="PDV.Tests/PDV.Tests.csproj" />
+</Solution>
