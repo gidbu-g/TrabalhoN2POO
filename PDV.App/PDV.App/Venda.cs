@@ -11,7 +11,8 @@ public class Venda
     public IReadOnlyList<ItemVenda> Itens => _itens;
     public decimal Total => _itens.Sum(item => item.TotalItem);
     public bool Paga => Pagamento != null;
-    public bool PodeReceberPagamento => !Cancelada && !Paga && _itens.Count > 0;
+    public bool PodeSerAlterada => !Cancelada && !Paga;
+    public bool PodeReceberPagamento => PodeSerAlterada && _itens.Count > 0;
 
     public Venda(int codigo)
     {
@@ -28,19 +29,28 @@ public class Venda
         if (quantidade < 0)
             throw new ArgumentException("A quantidade não pode ser negativa.");
 
-        ItemVenda? item = BuscarItem(produto.Codigo);
-
         if (quantidade == 0)
         {
-            if (item != null)
-                _itens.Remove(item);
+            RemoverItem(produto.Codigo);
             return;
         }
+
+        ItemVenda? item = BuscarItem(produto.Codigo);
 
         if (item == null)
             _itens.Add(new ItemVenda(produto.Codigo, produto.Nome, produto.Preco, quantidade));
         else
             item.Quantidade = quantidade;
+    }
+
+    public bool RemoverItem(int codigoProduto)
+    {
+        ItemVenda? item = BuscarItem(codigoProduto);
+        if (item == null)
+            return false;
+
+        _itens.Remove(item);
+        return true;
     }
 
     public void Cancelar()
