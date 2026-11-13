@@ -11,6 +11,7 @@ public class Venda
     public IReadOnlyList<ItemVenda> Itens => _itens;
     public decimal Total => _itens.Sum(item => item.TotalItem);
     public bool Paga => Pagamento != null;
+    public bool PodeReceberPagamento => !Cancelada && !Paga && _itens.Count > 0;
 
     public Venda(int codigo)
     {
