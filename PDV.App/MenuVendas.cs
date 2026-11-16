@@ -3,10 +3,12 @@ namespace PDV.App;
 public class MenuVendas
 {
     private readonly CadastroVenda _cadastro;
+    private readonly Armazenamento _armazenamento;
 
-    public MenuVendas(CadastroVenda cadastro)
+    public MenuVendas(CadastroVenda cadastro, Armazenamento armazenamento)
     {
         _cadastro = cadastro;
+        _armazenamento = armazenamento;
     }
 
     public void Exibir()
@@ -74,6 +76,7 @@ public class MenuVendas
     private void NovaVenda()
     {
         Venda venda = _cadastro.Criar();
+        _armazenamento.SalvarVendas();
         Console.WriteLine($"Venda {venda.Codigo} iniciada.");
         AtenderVenda(venda);
     }
@@ -127,6 +130,7 @@ public class MenuVendas
 
         bool estavaPaga = venda.Paga;
         _cadastro.Cancelar(venda);
+        _armazenamento.SalvarTudo();
 
         Console.WriteLine(estavaPaga
             ? "Venda cancelada. As quantidades voltaram ao estoque."
@@ -177,6 +181,10 @@ public class MenuVendas
         int quantidade = Entrada.LerInteiroComPadrao("Quantidade (0 remove o item)", 1);
 
         ResultadoItemVenda resultado = _cadastro.AdicionarItem(venda, produto, quantidade);
+
+        if (resultado == ResultadoItemVenda.ItemDefinido || resultado == ResultadoItemVenda.ItemRemovido)
+            _armazenamento.SalvarVendas();
+
         Console.WriteLine(DescreverResultado(resultado));
     }
 
@@ -185,9 +193,14 @@ public class MenuVendas
         int codigo = Entrada.LerInteiro("Código do produto a remover: ");
 
         if (_cadastro.RemoverItem(venda, codigo))
+        {
+            _armazenamento.SalvarVendas();
             Console.WriteLine("Item removido da venda.");
+        }
         else
+        {
             Console.WriteLine("Esse produto não está na venda.");
+        }
     }
 
     private static void ExibirItens(Venda venda)
@@ -216,7 +229,7 @@ public class MenuVendas
 
         if (!_cadastro.PossuiEstoqueSuficiente(venda))
         {
-            Console.WriteLine("O estoque não é mais suficiente");
+            Console.WriteLine("O estoque de algum item não é mais suficiente. Ajuste os itens da venda.");
             return;
         }
 
@@ -247,6 +260,7 @@ public class MenuVendas
 
         if (_cadastro.Pagar(venda, pagamento))
         {
+            _armazenamento.SalvarTudo();
             Console.WriteLine("Pagamento realizado com sucesso!");
             Console.WriteLine($"Valor da venda: {venda.Total:C}");
             Console.WriteLine($"Pagamento: {venda.Pagamento}");
@@ -298,10 +312,10 @@ public class MenuVendas
     {
         return resultado switch
         {
-            ResultadoItemVenda.ItemDefinido => "Item registrado.",
-            ResultadoItemVenda.ItemRemovido => "Item removido.",
+            ResultadoItemVenda.ItemDefinido => "Item registrado na venda.",
+            ResultadoItemVenda.ItemRemovido => "Item removido da venda.",
             ResultadoItemVenda.ProdutoNaoEncontrado => "Produto não encontrado.",
-            ResultadoItemVenda.EstoqueInsuficiente => "Estoque insuficiente.",
+            ResultadoItemVenda.EstoqueInsuficiente => "Estoque insuficiente para a quantidade informada.",
             ResultadoItemVenda.QuantidadeInvalida => "Quantidade inválida.",
             ResultadoItemVenda.VendaNaoPodeSerAlterada => "Esta venda não pode mais ser alterada.",
             _ => "Resultado desconhecido."

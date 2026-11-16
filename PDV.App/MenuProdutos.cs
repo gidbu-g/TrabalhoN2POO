@@ -3,10 +3,12 @@ namespace PDV.App;
 public class MenuProdutos
 {
     private readonly CadastroProduto _cadastro;
+    private readonly Armazenamento _armazenamento;
 
-    public MenuProdutos(CadastroProduto cadastro)
+    public MenuProdutos(CadastroProduto cadastro, Armazenamento armazenamento)
     {
         _cadastro = cadastro;
+        _armazenamento = armazenamento;
     }
 
     public void Exibir()
@@ -78,6 +80,7 @@ public class MenuProdutos
         try
         {
             _cadastro.Adicionar(new Produto(codigo, nome, preco, estoque));
+            _armazenamento.SalvarProdutos();
             Console.WriteLine("Produto adicionado com sucesso.");
         }
         catch (ArgumentException erro)
@@ -105,6 +108,7 @@ public class MenuProdutos
         try
         {
             _cadastro.Alterar(codigo, nome, preco, estoque);
+            _armazenamento.SalvarProdutos();
             Console.WriteLine("Produto alterado com sucesso.");
         }
         catch (ArgumentException erro)
@@ -118,8 +122,13 @@ public class MenuProdutos
         int codigo = Entrada.LerInteiro("Código do produto a remover: ");
 
         if (_cadastro.Remover(codigo))
+        {
+            _armazenamento.SalvarProdutos();
             Console.WriteLine("Produto removido com sucesso.");
+        }
         else
+        {
             Console.WriteLine("Produto não encontrado.");
+        }
     }
 }

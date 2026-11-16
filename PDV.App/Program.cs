@@ -5,8 +5,20 @@ CultureInfo.CurrentCulture = new CultureInfo("pt-BR");
 
 var cadastroProduto = new CadastroProduto();
 var cadastroVenda = new CadastroVenda(cadastroProduto);
-var menuProdutos = new MenuProdutos(cadastroProduto);
-var menuVendas = new MenuVendas(cadastroVenda);
+var armazenamento = new Armazenamento(cadastroProduto, cadastroVenda, AppContext.BaseDirectory);
+
+try
+{
+    armazenamento.CarregarTudo();
+}
+catch (Exception erro) when (erro is InvalidDataException or IOException or UnauthorizedAccessException)
+{
+    Console.WriteLine($"Não foi possível carregar os dados salvos: {erro.Message}");
+    Console.WriteLine("O sistema iniciará sem esses dados.");
+}
+
+var menuProdutos = new MenuProdutos(cadastroProduto, armazenamento);
+var menuVendas = new MenuVendas(cadastroVenda, armazenamento);
 
 int opcao;
 
