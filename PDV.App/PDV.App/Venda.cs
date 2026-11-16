@@ -52,7 +52,10 @@ public class Venda
         _itens.Remove(item);
         return true;
     }
-
+    public void CarregarItem(ItemVenda item)
+    {
+        _itens.Add(item);
+    }
     public void Cancelar()
     {
         Cancelada = true;
