@@ -50,4 +50,61 @@ public class CadastroProduto
         return _produtos.FirstOrDefault(p =>
             p.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase));
     }
+
+    public void SalvarProdutos(string caminho)
+    {
+        IEnumerable<string> linhas = _produtos.Select(FormatarLinha);
+        File.WriteAllLines(caminho, linhas);
+    }
+
+    public void CarregarProdutos(string caminho)
+    {
+        if (!File.Exists(caminho))
+            return;
+
+        var carregados = new List<Produto>();
+
+        foreach (string linha in File.ReadLines(caminho))
+        {
+            if (string.IsNullOrWhiteSpace(linha))
+                continue;
+
+            Produto produto = LerLinha(linha);
+
+            if (carregados.Any(p => p.Codigo == produto.Codigo))
+                throw new InvalidDataException($"Código de produto repetido no arquivo: {produto.Codigo}.");
+
+            carregados.Add(produto);
+        }
+
+        _produtos.Clear();
+        _produtos.AddRange(carregados);
+    }
+
+    private static string FormatarLinha(Produto produto)
+    {
+        string preco = FormatoArquivo.Formatar(produto.Preco);
+        return $"{produto.Codigo};{produto.Nome};{preco};{produto.Estoque}";
+    }
+
+    private static Produto LerLinha(string linha)
+    {
+        string[] campos = linha.Split(';');
+
+        if (campos.Length != 4)
+            throw new InvalidDataException($"Linha de produto inválida: {linha}");
+
+        try
+        {
+            return new Produto(
+                FormatoArquivo.LerInteiro(campos[0]),
+                campos[1],
+                FormatoArquivo.LerDecimal(campos[2]),
+                FormatoArquivo.LerInteiro(campos[3]));
+        }
+        catch (Exception erro) when (erro is FormatException or OverflowException or ArgumentException)
+        {
+            throw new InvalidDataException($"Linha de produto inválida: {linha}", erro);
+        }
+    }
 }

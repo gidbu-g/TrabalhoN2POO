@@ -15,6 +15,8 @@ public class Produto
         {
             if (string.IsNullOrWhiteSpace(value))
                 throw new ArgumentException("O nome do produto é obrigatório.");
+            if (value.Contains(';'))
+                throw new ArgumentException("O nome do produto não pode conter ponto e vírgula (;).");
             _nome = value;
         }
     }
